@@ -5,11 +5,14 @@ import Image from "next/image";
 
 type OrderType = "dine-in" | "pickup";
 
+interface PriceTier { size: string; price: number; }
+
 interface MenuItem {
   id: number;
   name: string;
   description: string;
   price: number;
+  priceTiers?: PriceTier[];
   category: string;
   isVeg: boolean;
 }
@@ -18,6 +21,7 @@ interface CartItem extends MenuItem {
   quantity: number;
   orderType: OrderType;
   time: string;
+  selectedSize?: string;
 }
 
 const CATEGORIES = [
@@ -432,47 +436,47 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 311, name: "Bacardi Breezer", description: "275ml flavoured breezer", price: 180, category: "Beer & Breezer", isVeg: true },
   { id: 312, name: "Bacardi RTD (8%)", description: "Ready-to-drink 8% Bacardi", price: 200, category: "Beer & Breezer", isVeg: true },
 
-  // Rum — price shown per 60ml peg | 30ml ₹X | 60ml ₹Y | 360ml ₹Z | 750ml ₹W
-  { id: 313, name: "Bacardi Black Rum", description: "30ml ₹100 | 60ml ₹160 | 360ml ₹850 | 750ml ₹1600", price: 160, category: "Rum", isVeg: true },
-  { id: 314, name: "Bacardi White Rum", description: "30ml ₹110 | 60ml ₹180 | 360ml ₹950 | 750ml ₹1800", price: 180, category: "Rum", isVeg: true },
-  { id: 315, name: "Old Monk Rum", description: "30ml ₹65 | 60ml ₹110 | 360ml ₹600 | 750ml ₹1100", price: 110, category: "Rum", isVeg: true },
-  { id: 316, name: "Camikara Rum", description: "30ml ₹150 | 60ml ₹250 | 360ml ₹1450 | 750ml ₹2800", price: 250, category: "Rum", isVeg: true },
+  // Rum
+  { id: 313, name: "Bacardi Black Rum", description: "", price: 160, priceTiers: [{ size: "30ml", price: 100 }, { size: "60ml", price: 160 }, { size: "360ml", price: 850 }, { size: "750ml", price: 1600 }], category: "Rum", isVeg: true },
+  { id: 314, name: "Bacardi White Rum", description: "", price: 180, priceTiers: [{ size: "30ml", price: 110 }, { size: "60ml", price: 180 }, { size: "360ml", price: 950 }, { size: "750ml", price: 1800 }], category: "Rum", isVeg: true },
+  { id: 315, name: "Old Monk Rum", description: "", price: 110, priceTiers: [{ size: "30ml", price: 65 }, { size: "60ml", price: 110 }, { size: "360ml", price: 600 }, { size: "750ml", price: 1100 }], category: "Rum", isVeg: true },
+  { id: 316, name: "Camikara Rum", description: "", price: 250, priceTiers: [{ size: "30ml", price: 150 }, { size: "60ml", price: 250 }, { size: "360ml", price: 1450 }, { size: "750ml", price: 2800 }], category: "Rum", isVeg: true },
 
-  // Vodka — price shown per 60ml peg
-  { id: 317, name: "Absolut Vodka (Plain)", description: "30ml ₹150 | 60ml ₹250 | 360ml ₹1450 | 750ml ₹2800", price: 250, category: "Vodka", isVeg: true },
-  { id: 318, name: "Absolut Vodka (Flavoured)", description: "30ml ₹180 | 60ml ₹280 | 360ml ₹1550 | 750ml ₹3000", price: 280, category: "Vodka", isVeg: true },
-  { id: 319, name: "Magic Moments Vodka (Plain)", description: "30ml ₹80 | 60ml ₹130 | 360ml ₹700 | 750ml ₹1300", price: 130, category: "Vodka", isVeg: true },
-  { id: 320, name: "Magic Moments Vodka (Flavoured)", description: "30ml ₹90 | 60ml ₹150 | 360ml ₹800 | 750ml ₹1500", price: 150, category: "Vodka", isVeg: true },
-  { id: 321, name: "Smirnoff Vodka (Plain)", description: "30ml ₹100 | 60ml ₹160 | 360ml ₹850 | 750ml ₹1600", price: 160, category: "Vodka", isVeg: true },
-  { id: 322, name: "Smirnoff Vodka (Flavoured)", description: "30ml ₹120 | 60ml ₹190 | 360ml ₹1050 | 750ml ₹2000", price: 190, category: "Vodka", isVeg: true },
-  { id: 323, name: "Cashmir Vodka", description: "30ml ₹180 | 60ml ₹280 | 360ml ₹1550 | 750ml ₹3000", price: 280, category: "Vodka", isVeg: true },
+  // Vodka
+  { id: 317, name: "Absolut Vodka (Plain)", description: "", price: 250, priceTiers: [{ size: "30ml", price: 150 }, { size: "60ml", price: 250 }, { size: "360ml", price: 1450 }, { size: "750ml", price: 2800 }], category: "Vodka", isVeg: true },
+  { id: 318, name: "Absolut Vodka (Flavoured)", description: "", price: 280, priceTiers: [{ size: "30ml", price: 180 }, { size: "60ml", price: 280 }, { size: "360ml", price: 1550 }, { size: "750ml", price: 3000 }], category: "Vodka", isVeg: true },
+  { id: 319, name: "Magic Moments Vodka (Plain)", description: "", price: 130, priceTiers: [{ size: "30ml", price: 80 }, { size: "60ml", price: 130 }, { size: "360ml", price: 700 }, { size: "750ml", price: 1300 }], category: "Vodka", isVeg: true },
+  { id: 320, name: "Magic Moments Vodka (Flavoured)", description: "", price: 150, priceTiers: [{ size: "30ml", price: 90 }, { size: "60ml", price: 150 }, { size: "360ml", price: 800 }, { size: "750ml", price: 1500 }], category: "Vodka", isVeg: true },
+  { id: 321, name: "Smirnoff Vodka (Plain)", description: "", price: 160, priceTiers: [{ size: "30ml", price: 100 }, { size: "60ml", price: 160 }, { size: "360ml", price: 850 }, { size: "750ml", price: 1600 }], category: "Vodka", isVeg: true },
+  { id: 322, name: "Smirnoff Vodka (Flavoured)", description: "", price: 190, priceTiers: [{ size: "30ml", price: 120 }, { size: "60ml", price: 190 }, { size: "360ml", price: 1050 }, { size: "750ml", price: 2000 }], category: "Vodka", isVeg: true },
+  { id: 323, name: "Cashmir Vodka", description: "", price: 280, priceTiers: [{ size: "30ml", price: 180 }, { size: "60ml", price: 280 }, { size: "360ml", price: 1550 }, { size: "750ml", price: 3000 }], category: "Vodka", isVeg: true },
 
-  // Whisky & Scotch — price shown per 60ml peg
-  { id: 324, name: "Chivas Regal 12 Year Old", description: "30ml ₹200 | 60ml ₹350 | 360ml ₹2050 | 750ml ₹4000", price: 350, category: "Whisky & Scotch", isVeg: true },
-  { id: 325, name: "Chivas Regal 18 Year Old", description: "30ml ₹350 | 60ml ₹650 | 360ml ₹3800 | 750ml ₹7500", price: 650, category: "Whisky & Scotch", isVeg: true },
-  { id: 326, name: "Johnnie Walker Black Label", description: "30ml ₹200 | 60ml ₹350 | 360ml ₹2050 | 750ml ₹4000", price: 350, category: "Whisky & Scotch", isVeg: true },
-  { id: 327, name: "Johnnie Walker Red Label", description: "30ml ₹150 | 60ml ₹250 | 360ml ₹1450 | 750ml ₹2800", price: 250, category: "Whisky & Scotch", isVeg: true },
-  { id: 328, name: "Ballantine's Finest", description: "30ml ₹150 | 60ml ₹250 | 360ml ₹1450 | 750ml ₹2800", price: 250, category: "Whisky & Scotch", isVeg: true },
-  { id: 329, name: "Jim Beam Bourbon", description: "30ml ₹180 | 60ml ₹280 | 360ml ₹1550 | 750ml ₹3000", price: 280, category: "Whisky & Scotch", isVeg: true },
-  { id: 330, name: "Jack Daniel's Old No. 7", description: "30ml ₹230 | 60ml ₹400 | 360ml ₹2300 | 750ml ₹4500", price: 400, category: "Whisky & Scotch", isVeg: true },
-  { id: 331, name: "100 Pipers Blended Scotch Whisky", description: "30ml ₹150 | 60ml ₹250 | 360ml ₹1450 | 750ml ₹2800", price: 250, category: "Whisky & Scotch", isVeg: true },
-  { id: 332, name: "100 Pipers 12 Year Old", description: "30ml ₹190 | 60ml ₹330 | 360ml ₹1800 | 750ml ₹3500", price: 330, category: "Whisky & Scotch", isVeg: true },
-  { id: 333, name: "Black Dog Scotch Whisky", description: "30ml ₹180 | 60ml ₹280 | 360ml ₹1550 | 750ml ₹3000", price: 280, category: "Whisky & Scotch", isVeg: true },
-  { id: 334, name: "Vat 69 Blended Scotch Whisky", description: "30ml ₹140 | 60ml ₹240 | 360ml ₹1350 | 750ml ₹2600", price: 240, category: "Whisky & Scotch", isVeg: true },
-  { id: 335, name: "Antiquity Blue Whisky", description: "30ml ₹130 | 60ml ₹200 | 360ml ₹1150 | 750ml ₹2200", price: 200, category: "Whisky & Scotch", isVeg: true },
-  { id: 336, name: "Teacher's Highland Cream", description: "30ml ₹180 | 60ml ₹280 | 360ml ₹1550 | 750ml ₹3000", price: 280, category: "Whisky & Scotch", isVeg: true },
-  { id: 337, name: "Teacher's 50 / Origin", description: "30ml ₹190 | 60ml ₹330 | 360ml ₹1800 | 750ml ₹3500", price: 330, category: "Whisky & Scotch", isVeg: true },
-  { id: 338, name: "Indri-Trini The Three Wood Whisky", description: "30ml ₹250 | 60ml ₹450 | 360ml ₹2550 | 750ml ₹5000", price: 450, category: "Whisky & Scotch", isVeg: true },
-  { id: 339, name: "Jameson Irish Whiskey", description: "30ml ₹190 | 60ml ₹330 | 360ml ₹1800 | 750ml ₹3500", price: 330, category: "Whisky & Scotch", isVeg: true },
-  { id: 340, name: "Black & White Blended Scotch Whisky", description: "30ml ₹180 | 60ml ₹280 | 360ml ₹1550 | 750ml ₹3000", price: 280, category: "Whisky & Scotch", isVeg: true },
-  { id: 341, name: "Signature Rare Aged Whisky", description: "30ml ₹100 | 60ml ₹160 | 360ml ₹850 | 750ml ₹1600", price: 160, category: "Whisky & Scotch", isVeg: true },
-  { id: 342, name: "Blenders Pride Whisky", description: "30ml ₹100 | 60ml ₹160 | 360ml ₹850 | 750ml ₹1600", price: 160, category: "Whisky & Scotch", isVeg: true },
-  { id: 343, name: "Royal Stag Whisky", description: "30ml ₹70 | 60ml ₹120 | 360ml ₹650 | 750ml ₹1200", price: 120, category: "Whisky & Scotch", isVeg: true },
-  { id: 344, name: "Sterling Reserve Whisky", description: "30ml ₹70 | 60ml ₹120 | 360ml ₹650 | 750ml ₹1200", price: 120, category: "Whisky & Scotch", isVeg: true },
-  { id: 345, name: "Royal Challenge Whisky", description: "30ml ₹70 | 60ml ₹120 | 360ml ₹650 | 750ml ₹1200", price: 120, category: "Whisky & Scotch", isVeg: true },
-  { id: 346, name: "Rockford Reserve Whisky", description: "30ml ₹100 | 60ml ₹160 | 360ml ₹850 | 750ml ₹1600", price: 160, category: "Whisky & Scotch", isVeg: true },
-  { id: 347, name: "Indri Agneya Whisky", description: "30ml ₹350 | 60ml ₹650 | 360ml ₹3800 | 750ml ₹7500", price: 650, category: "Whisky & Scotch", isVeg: true },
-  { id: 348, name: "Whistler Whisky", description: "30ml ₹100 | 60ml ₹160 | 360ml ₹850 | 750ml ₹1600", price: 160, category: "Whisky & Scotch", isVeg: true },
+  // Whisky & Scotch
+  { id: 324, name: "Chivas Regal 12 Year Old", description: "", price: 350, priceTiers: [{ size: "30ml", price: 200 }, { size: "60ml", price: 350 }, { size: "360ml", price: 2050 }, { size: "750ml", price: 4000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 325, name: "Chivas Regal 18 Year Old", description: "", price: 650, priceTiers: [{ size: "30ml", price: 350 }, { size: "60ml", price: 650 }, { size: "360ml", price: 3800 }, { size: "750ml", price: 7500 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 326, name: "Johnnie Walker Black Label", description: "", price: 350, priceTiers: [{ size: "30ml", price: 200 }, { size: "60ml", price: 350 }, { size: "360ml", price: 2050 }, { size: "750ml", price: 4000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 327, name: "Johnnie Walker Red Label", description: "", price: 250, priceTiers: [{ size: "30ml", price: 150 }, { size: "60ml", price: 250 }, { size: "360ml", price: 1450 }, { size: "750ml", price: 2800 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 328, name: "Ballantine's Finest", description: "", price: 250, priceTiers: [{ size: "30ml", price: 150 }, { size: "60ml", price: 250 }, { size: "360ml", price: 1450 }, { size: "750ml", price: 2800 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 329, name: "Jim Beam Bourbon", description: "", price: 280, priceTiers: [{ size: "30ml", price: 180 }, { size: "60ml", price: 280 }, { size: "360ml", price: 1550 }, { size: "750ml", price: 3000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 330, name: "Jack Daniel's Old No. 7", description: "", price: 400, priceTiers: [{ size: "30ml", price: 230 }, { size: "60ml", price: 400 }, { size: "360ml", price: 2300 }, { size: "750ml", price: 4500 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 331, name: "100 Pipers Blended Scotch Whisky", description: "", price: 250, priceTiers: [{ size: "30ml", price: 150 }, { size: "60ml", price: 250 }, { size: "360ml", price: 1450 }, { size: "750ml", price: 2800 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 332, name: "100 Pipers 12 Year Old", description: "", price: 330, priceTiers: [{ size: "30ml", price: 190 }, { size: "60ml", price: 330 }, { size: "360ml", price: 1800 }, { size: "750ml", price: 3500 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 333, name: "Black Dog Scotch Whisky", description: "", price: 280, priceTiers: [{ size: "30ml", price: 180 }, { size: "60ml", price: 280 }, { size: "360ml", price: 1550 }, { size: "750ml", price: 3000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 334, name: "Vat 69 Blended Scotch Whisky", description: "", price: 240, priceTiers: [{ size: "30ml", price: 140 }, { size: "60ml", price: 240 }, { size: "360ml", price: 1350 }, { size: "750ml", price: 2600 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 335, name: "Antiquity Blue Whisky", description: "", price: 200, priceTiers: [{ size: "30ml", price: 130 }, { size: "60ml", price: 200 }, { size: "360ml", price: 1150 }, { size: "750ml", price: 2200 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 336, name: "Teacher's Highland Cream", description: "", price: 280, priceTiers: [{ size: "30ml", price: 180 }, { size: "60ml", price: 280 }, { size: "360ml", price: 1550 }, { size: "750ml", price: 3000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 337, name: "Teacher's 50 / Origin", description: "", price: 330, priceTiers: [{ size: "30ml", price: 190 }, { size: "60ml", price: 330 }, { size: "360ml", price: 1800 }, { size: "750ml", price: 3500 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 338, name: "Indri-Trini The Three Wood Whisky", description: "", price: 450, priceTiers: [{ size: "30ml", price: 250 }, { size: "60ml", price: 450 }, { size: "360ml", price: 2550 }, { size: "750ml", price: 5000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 339, name: "Jameson Irish Whiskey", description: "", price: 330, priceTiers: [{ size: "30ml", price: 190 }, { size: "60ml", price: 330 }, { size: "360ml", price: 1800 }, { size: "750ml", price: 3500 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 340, name: "Black & White Blended Scotch Whisky", description: "", price: 280, priceTiers: [{ size: "30ml", price: 180 }, { size: "60ml", price: 280 }, { size: "360ml", price: 1550 }, { size: "750ml", price: 3000 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 341, name: "Signature Rare Aged Whisky", description: "", price: 160, priceTiers: [{ size: "30ml", price: 100 }, { size: "60ml", price: 160 }, { size: "360ml", price: 850 }, { size: "750ml", price: 1600 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 342, name: "Blenders Pride Whisky", description: "", price: 160, priceTiers: [{ size: "30ml", price: 100 }, { size: "60ml", price: 160 }, { size: "360ml", price: 850 }, { size: "750ml", price: 1600 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 343, name: "Royal Stag Whisky", description: "", price: 120, priceTiers: [{ size: "30ml", price: 70 }, { size: "60ml", price: 120 }, { size: "360ml", price: 650 }, { size: "750ml", price: 1200 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 344, name: "Sterling Reserve Whisky", description: "", price: 120, priceTiers: [{ size: "30ml", price: 70 }, { size: "60ml", price: 120 }, { size: "360ml", price: 650 }, { size: "750ml", price: 1200 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 345, name: "Royal Challenge Whisky", description: "", price: 120, priceTiers: [{ size: "30ml", price: 70 }, { size: "60ml", price: 120 }, { size: "360ml", price: 650 }, { size: "750ml", price: 1200 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 346, name: "Rockford Reserve Whisky", description: "", price: 160, priceTiers: [{ size: "30ml", price: 100 }, { size: "60ml", price: 160 }, { size: "360ml", price: 850 }, { size: "750ml", price: 1600 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 347, name: "Indri Agneya Whisky", description: "", price: 650, priceTiers: [{ size: "30ml", price: 350 }, { size: "60ml", price: 650 }, { size: "360ml", price: 3800 }, { size: "750ml", price: 7500 }], category: "Whisky & Scotch", isVeg: true },
+  { id: 348, name: "Whistler Whisky", description: "", price: 160, priceTiers: [{ size: "30ml", price: 100 }, { size: "60ml", price: 160 }, { size: "360ml", price: 850 }, { size: "750ml", price: 1600 }], category: "Whisky & Scotch", isVeg: true },
 
   // Cocktails
   { id: 349, name: "Green Screwdriver", description: "Blue Curacao Syrup, Vodka, Orange Juice", price: 403, category: "Cocktails", isVeg: true },
@@ -606,7 +610,9 @@ export default function MenuPage() {
   const [orderType, setOrderType] = useState<OrderType>("dine-in");
   const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[0]);
   const [selectedTable, setSelectedTable] = useState("Table 1");
+  const [selectedSize, setSelectedSize] = useState("60ml");
   const [search, setSearch] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -651,6 +657,7 @@ export default function MenuPage() {
     setMenuSection(section);
     setActiveCategory(section === "restaurant" ? RESTAURANT_CATEGORIES[0] : BAR_CATEGORIES[0]);
     setSearch("");
+    setFilterOpen(false);
   };
 
   const openAddModal = (item: MenuItem) => {
@@ -658,6 +665,7 @@ export default function MenuPage() {
     setModalClosing(false);
     setOrderType("dine-in");
     setSelectedTable("Table 1");
+    setSelectedSize("60ml");
     const available = getAvailableTimeSlots();
     setSelectedTime(available[0]);
   };
@@ -678,30 +686,36 @@ export default function MenuPage() {
     }, 300);
   };
 
+  const getCartKey = (c: CartItem) => `${c.id}-${c.orderType}-${c.time}-${c.selectedSize ?? ""}`;
+
   const confirmAdd = () => {
     if (!modal) return;
     const slot = orderType === "dine-in" ? selectedTable : selectedTime;
+    const size = modal.priceTiers ? selectedSize : undefined;
+    const effectivePrice = modal.priceTiers
+      ? (modal.priceTiers.find((t) => t.size === selectedSize)?.price ?? modal.price)
+      : modal.price;
     setCart((prev) => {
       const existing = prev.find(
-        (c) => c.id === modal.id && c.orderType === orderType && c.time === slot
+        (c) => c.id === modal.id && c.orderType === orderType && c.time === slot && c.selectedSize === size
       );
       if (existing) {
         return prev.map((c) =>
-          c.id === modal.id && c.orderType === orderType && c.time === slot
+          c.id === modal.id && c.orderType === orderType && c.time === slot && c.selectedSize === size
             ? { ...c, quantity: c.quantity + 1 }
             : c
         );
       }
-      return [...prev, { ...modal, quantity: 1, orderType, time: slot }];
+      return [...prev, { ...modal, price: effectivePrice, quantity: 1, orderType, time: slot, selectedSize: size }];
     });
     setModal(null);
   };
 
-  const removeItem = (id: number) => setCart((p) => p.filter((c) => c.id !== id));
+  const removeItem = (key: string) => setCart((p) => p.filter((c) => getCartKey(c) !== key));
 
-  const updateQty = (id: number, delta: number) =>
+  const updateQty = (key: string, delta: number) =>
     setCart((p) =>
-      p.map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c)).filter((c) => c.quantity > 0)
+      p.map((c) => (getCartKey(c) === key ? { ...c, quantity: c.quantity + delta } : c)).filter((c) => c.quantity > 0)
     );
 
   const total = cart.reduce((s, c) => s + c.price * c.quantity, 0);
@@ -721,7 +735,8 @@ export default function MenuPage() {
       Object.entries(byTable).forEach(([table, items]) => {
         sections.push(`*${table}*`);
         items.forEach((c) => {
-          sections.push(`• ${c.name} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`);
+          const sizeLabel = c.selectedSize ? ` (${c.selectedSize})` : "";
+          sections.push(`• ${c.name}${sizeLabel} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`);
         });
       });
     }
@@ -736,7 +751,8 @@ export default function MenuPage() {
       Object.entries(byTime).forEach(([time, items]) => {
         sections.push(`*Time: ${time}*`);
         items.forEach((c) => {
-          sections.push(`• ${c.name} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`);
+          const sizeLabel = c.selectedSize ? ` (${c.selectedSize})` : "";
+          sections.push(`• ${c.name}${sizeLabel} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`);
         });
       });
     }
@@ -853,34 +869,47 @@ export default function MenuPage() {
                 </button>
               )}
             </div>
+
+            {/* Filter button */}
+            <button
+              onClick={() => setFilterOpen((o) => !o)}
+              className={`cursor-pointer flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] sm:text-[13px] font-bold transition-all border-2 select-none ${
+                filterOpen
+                  ? "bg-orange-500 border-orange-500 text-white"
+                  : activeCategory !== visibleCategories[0]
+                  ? "border-orange-400 text-orange-500 bg-orange-50"
+                  : "border-stone-200 text-stone-600 bg-stone-50 hover:border-orange-300 hover:text-orange-500"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4h18M7 8h10M10 12h4" />
+              </svg>
+              <span className="hidden xs:inline">{filterOpen ? "Close" : "Filter"}</span>
+            </button>
           </div>
 
-          {/* Category pills — hidden while searching */}
-          {!search && (
-            <div className="relative">
+          {/* Collapsible category panel */}
+          {filterOpen && !search && (
+            <div className="border-t border-stone-100">
               <div
                 ref={tabsRef}
-                className="flex gap-1.5 overflow-x-auto px-4 sm:px-6 pb-2 pt-0.5"
-                style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                className="flex flex-wrap gap-1.5 px-4 sm:px-6 py-3"
               >
                 {visibleCategories.map((cat) => (
                   <button
                     key={cat}
                     data-tab={cat}
-                    onClick={() => scrollToCategory(cat)}
-                    className={`cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold whitespace-nowrap transition-all duration-200 select-none ${
+                    onClick={() => { scrollToCategory(cat); setFilterOpen(false); }}
+                    className={`cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold whitespace-nowrap transition-all duration-150 select-none ${
                       activeCategory === cat
-                        ? "bg-orange-500 text-white shadow-md shadow-orange-300/40 scale-[1.04]"
+                        ? "bg-orange-500 text-white shadow-md shadow-orange-300/40"
                         : "bg-stone-100 text-stone-600 hover:bg-orange-50 hover:text-orange-600"
                     }`}
                   >
                     {cat}
                   </button>
                 ))}
-                <div className="flex-shrink-0 w-8" />
               </div>
-              <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white to-transparent" />
-              <div className="pointer-events-none absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-white to-transparent" />
             </div>
           )}
         </div>
@@ -985,16 +1014,20 @@ export default function MenuPage() {
                     <VegIcon isVeg={item.isVeg} />
                     <div className="min-w-0">
                       <h3 className="font-semibold text-stone-800 text-[12px] sm:text-[14px] leading-snug">{item.name}</h3>
-                      <p className="hidden sm:block text-[13px] font-bold text-stone-900 mt-0.5">₹{item.price.toLocaleString("en-IN")}</p>
+                      <p className="hidden sm:block text-[13px] font-bold text-stone-900 mt-0.5">
+                        {item.priceTiers ? `from ₹${item.priceTiers[0].price}` : `₹${item.price.toLocaleString("en-IN")}`}
+                      </p>
                     </div>
                   </div>
                   {/* Bottom row — price (mobile only, left) + button (right) */}
                   <div className="flex items-center justify-between sm:justify-start sm:flex-shrink-0 gap-1.5">
-                    <p className="sm:hidden text-[12px] font-bold text-stone-900">₹{item.price.toLocaleString("en-IN")}</p>
+                    <p className="sm:hidden text-[12px] font-bold text-stone-900">
+                      {item.priceTiers ? `from ₹${item.priceTiers[0].price}` : `₹${item.price.toLocaleString("en-IN")}`}
+                    </p>
                     {(() => {
                       const qty = cart.filter((c) => c.id === item.id).reduce((s, c) => s + c.quantity, 0);
 
-                      if (qty > 0) {
+                      if (qty > 0 && !item.priceTiers) {
                         return (
                           <div className="flex items-center gap-0.5 sm:gap-1">
                             <button
@@ -1033,10 +1066,11 @@ export default function MenuPage() {
                       return (
                         <button
                           onClick={() => openAddModal(item)}
-                          className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2.5 sm:px-4 py-1 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-[13px] font-bold transition-all active:scale-95 select-none bg-orange-500 text-white hover:bg-orange-600"
+                          className={`cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2.5 sm:px-4 py-1 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-[13px] font-bold transition-all active:scale-95 select-none text-white ${qty > 0 ? "bg-green-500 hover:bg-green-600" : "bg-orange-500 hover:bg-orange-600"}`}
                         >
                           <span className="leading-none">+</span>
                           Add
+                          {qty > 0 && <span className="text-[9px] bg-white/25 px-1 rounded-full leading-none py-0.5">{qty}</span>}
                         </button>
                       );
                     })()}
@@ -1089,7 +1123,12 @@ export default function MenuPage() {
                 {modal.isVeg ? "Vegetarian" : "Non-Vegetarian"}
               </span>
               <h3 className="text-2xl font-black text-white leading-tight pr-10">{modal.name}</h3>
-              <p className="text-3xl font-black text-white/90 mt-1">₹{modal.price.toLocaleString("en-IN")}</p>
+              <p className="text-3xl font-black text-white/90 mt-1">
+                ₹{(modal.priceTiers
+                  ? (modal.priceTiers.find((t) => t.size === selectedSize)?.price ?? modal.price)
+                  : modal.price
+                ).toLocaleString("en-IN")}
+              </p>
               {modal.description && (
                 <p className="text-white/70 text-xs mt-2 font-medium leading-relaxed">{modal.description}</p>
               )}
@@ -1097,6 +1136,32 @@ export default function MenuPage() {
 
             {/* Body */}
             <div className="px-6 pt-5 pb-6">
+              {/* Size selector for tiered items */}
+              {modal.priceTiers && (
+                <div className="mb-5">
+                  <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Select Size</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {modal.priceTiers.map((tier) => {
+                      const isActive = selectedSize === tier.size;
+                      return (
+                        <button
+                          key={tier.size}
+                          onClick={() => setSelectedSize(tier.size)}
+                          className={`cursor-pointer flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl font-bold text-xs transition-all border-2 select-none ${
+                            isActive
+                              ? "border-orange-500 bg-orange-50 text-orange-600 shadow-sm"
+                              : "border-stone-100 bg-stone-50 text-stone-500 hover:border-orange-200 hover:text-orange-500"
+                          }`}
+                        >
+                          <span className="text-[11px] font-black">{tier.size}</span>
+                          <span className="text-[10px] font-semibold">₹{tier.price.toLocaleString("en-IN")}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Order type */}
               <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Order Type</p>
               <div className="grid grid-cols-2 gap-2.5 mb-5">
@@ -1245,20 +1310,23 @@ export default function MenuPage() {
               <>
                 {/* Cart Items */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {cart.map((item) => (
-                    <div key={item.id} className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4">
+                  {cart.map((item) => {
+                    const cartKey = getCartKey(item);
+                    return (
+                    <div key={cartKey} className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4">
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="flex items-start gap-2 min-w-0">
                           <VegIcon isVeg={item.isVeg} />
                           <div className="min-w-0">
                             <p className="font-bold text-stone-900 text-sm leading-snug">{item.name}</p>
                             <p className="text-xs font-semibold text-orange-400 mt-0.5">
+                              {item.selectedSize && <span>{item.selectedSize} • </span>}
                               {item.orderType === "dine-in" ? "Dine-In 🍽️" : "Pickup 🛍️"} • {item.time}
                             </p>
                           </div>
                         </div>
                         <button
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(cartKey)}
                           className="cursor-pointer text-stone-300 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1270,14 +1338,14 @@ export default function MenuPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => updateQty(item.id, -1)}
+                            onClick={() => updateQty(cartKey, -1)}
                             className="cursor-pointer w-8 h-8 rounded-xl bg-white border border-stone-200 hover:border-orange-300 flex items-center justify-center text-stone-700 font-black text-base transition-colors"
                           >
                             −
                           </button>
                           <span className="text-sm font-black text-stone-900 w-5 text-center">{item.quantity}</span>
                           <button
-                            onClick={() => updateQty(item.id, 1)}
+                            onClick={() => updateQty(cartKey, 1)}
                             className="cursor-pointer w-8 h-8 rounded-xl bg-orange-500 hover:bg-orange-600 flex items-center justify-center text-white font-black text-base transition-colors"
                           >
                             +
@@ -1288,7 +1356,8 @@ export default function MenuPage() {
                         </span>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Cart Footer */}
