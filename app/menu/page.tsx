@@ -53,6 +53,11 @@ const CATEGORIES = [
   "Shakes",
 ];
 
+const RESTAURANT_CATEGORIES = CATEGORIES.slice(0, 21); // Breakfast → Desserts
+const BAR_CATEGORIES = CATEGORIES.slice(21);           // Beer & Breezer → Shakes
+
+type MenuSection = "restaurant" | "bar";
+
 const MENU_ITEMS: MenuItem[] = [
   // Breakfast — Veg
   { id: 1, name: "Plain Prantha", description: "Classic plain wheat prantha served with butter and pickle", price: 43, category: "Breakfast", isVeg: true },
@@ -535,7 +540,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 403, name: "Black Currant Shake", description: "Black currant flavoured milkshake", price: 163, category: "Shakes", isVeg: true },
 ];
 
-const WHATSAPP_NUMBER = "918988384800";
+const WHATSAPP_NUMBER = "918626930851";
 
 function generateTimeSlots(): string[] {
   const slots: string[] = [];
@@ -591,7 +596,8 @@ const CartIcon = () => (
 );
 
 export default function MenuPage() {
-  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
+  const [menuSection, setMenuSection] = useState<MenuSection>("restaurant");
+  const [activeCategory, setActiveCategory] = useState(RESTAURANT_CATEGORIES[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [cartClosing, setCartClosing] = useState(false);
@@ -599,6 +605,7 @@ export default function MenuPage() {
   const [modalClosing, setModalClosing] = useState(false);
   const [orderType, setOrderType] = useState<OrderType>("dine-in");
   const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[0]);
+  const [selectedTable, setSelectedTable] = useState("Table 1");
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -606,7 +613,10 @@ export default function MenuPage() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
 
+  const visibleCategories = menuSection === "restaurant" ? RESTAURANT_CATEGORIES : BAR_CATEGORIES;
+
   useEffect(() => {
+    const cats = menuSection === "restaurant" ? RESTAURANT_CATEGORIES : BAR_CATEGORIES;
     const observer = new IntersectionObserver(
       (entries) => {
         if (isScrollingRef.current) return;
@@ -618,12 +628,12 @@ export default function MenuPage() {
       },
       { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
     );
-    CATEGORIES.forEach((cat) => {
+    cats.forEach((cat) => {
       const el = categoryRefs.current[cat];
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, []);
+  }, [menuSection]);
 
   const scrollToCategory = useCallback((cat: string) => {
     setActiveCategory(cat);
@@ -637,10 +647,17 @@ export default function MenuPage() {
     setTimeout(() => { isScrollingRef.current = false; }, 800);
   }, []);
 
+  const switchMenuSection = (section: MenuSection) => {
+    setMenuSection(section);
+    setActiveCategory(section === "restaurant" ? RESTAURANT_CATEGORIES[0] : BAR_CATEGORIES[0]);
+    setSearch("");
+  };
+
   const openAddModal = (item: MenuItem) => {
     setModal(item);
     setModalClosing(false);
     setOrderType("dine-in");
+    setSelectedTable("Table 1");
     const available = getAvailableTimeSlots();
     setSelectedTime(available[0]);
   };
@@ -663,18 +680,19 @@ export default function MenuPage() {
 
   const confirmAdd = () => {
     if (!modal) return;
+    const slot = orderType === "dine-in" ? selectedTable : selectedTime;
     setCart((prev) => {
       const existing = prev.find(
-        (c) => c.id === modal.id && c.orderType === orderType && c.time === selectedTime
+        (c) => c.id === modal.id && c.orderType === orderType && c.time === slot
       );
       if (existing) {
         return prev.map((c) =>
-          c.id === modal.id && c.orderType === orderType && c.time === selectedTime
+          c.id === modal.id && c.orderType === orderType && c.time === slot
             ? { ...c, quantity: c.quantity + 1 }
             : c
         );
       }
-      return [...prev, { ...modal, quantity: 1, orderType, time: selectedTime }];
+      return [...prev, { ...modal, quantity: 1, orderType, time: slot }];
     });
     setModal(null);
   };
@@ -691,19 +709,42 @@ export default function MenuPage() {
 
   const sendWhatsApp = () => {
     if (!cart.length) return;
-    const first = cart[0];
-    const typeLabel = first.orderType === "dine-in" ? "Dine-In" : "Pickup";
-    const lines = cart
-      .map((c) => `• ${c.name} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`)
-      .join("\n");
+
+    const sections: string[] = [];
+
+    // Dine-in items grouped by table
+    const dineInItems = cart.filter((c) => c.orderType === "dine-in");
+    if (dineInItems.length > 0) {
+      sections.push(`🍽️ *Dine-In:*`);
+      const byTable: Record<string, CartItem[]> = {};
+      dineInItems.forEach((c) => { (byTable[c.time] ??= []).push(c); });
+      Object.entries(byTable).forEach(([table, items]) => {
+        sections.push(`*${table}*`);
+        items.forEach((c) => {
+          sections.push(`• ${c.name} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`);
+        });
+      });
+    }
+
+    // Pickup items grouped by time slot
+    const pickupItems = cart.filter((c) => c.orderType === "pickup");
+    if (pickupItems.length > 0) {
+      if (dineInItems.length > 0) sections.push(``);
+      sections.push(`🛍️ *Pickup:*`);
+      const byTime: Record<string, CartItem[]> = {};
+      pickupItems.forEach((c) => { (byTime[c.time] ??= []).push(c); });
+      Object.entries(byTime).forEach(([time, items]) => {
+        sections.push(`*Time: ${time}*`);
+        items.forEach((c) => {
+          sections.push(`• ${c.name} x${c.quantity} — ₹${(c.price * c.quantity).toLocaleString("en-IN")}`);
+        });
+      });
+    }
+
     const msg = [
       `Hi! I would like to place an order from *Shiva Drink & Dine* 🍽️`,
       ``,
-      `*Order Type:* ${typeLabel}`,
-      `*Time:* ${first.time}`,
-      ``,
-      `*Items:*`,
-      lines,
+      ...sections,
       ``,
       `*Total: ₹${total.toLocaleString("en-IN")} + GST*`,
       ``,
@@ -716,8 +757,9 @@ export default function MenuPage() {
   const searchResults = searchQuery
     ? MENU_ITEMS.filter(
         (i) =>
-          i.name.toLowerCase().includes(searchQuery) ||
-          i.category.toLowerCase().includes(searchQuery)
+          visibleCategories.includes(i.category) &&
+          (i.name.toLowerCase().includes(searchQuery) ||
+           i.category.toLowerCase().includes(searchQuery))
       )
     : [];
 
@@ -760,10 +802,36 @@ export default function MenuPage() {
       {/* ── Search + Category Filter ─────────────────────────────── */}
       <nav className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/70 shadow-sm">
         <div className="max-w-6xl mx-auto">
-          {/* Search bar */}
-          <div className="px-4 sm:px-6 pt-2.5 pb-2">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+          {/* ── Toggle + Search — single compact row ── */}
+          <div className="flex items-center gap-2 px-4 sm:px-6 py-2">
+            {/* Segmented pill toggle */}
+            <div className="flex bg-stone-200 rounded-lg p-0.5 flex-shrink-0">
+              <button
+                onClick={() => switchMenuSection("restaurant")}
+                className={`cursor-pointer flex items-center gap-1 px-3 sm:px-3.5 py-1.5 rounded-md text-[12px] sm:text-[13px] font-bold transition-all duration-200 whitespace-nowrap ${
+                  menuSection === "restaurant"
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-300/50"
+                    : "text-stone-500 hover:text-stone-800"
+                }`}
+              >
+                🍽️ <span>Restaurant</span>
+              </button>
+              <button
+                onClick={() => switchMenuSection("bar")}
+                className={`cursor-pointer flex items-center gap-1 px-3 sm:px-3.5 py-1.5 rounded-md text-[12px] sm:text-[13px] font-bold transition-all duration-200 whitespace-nowrap ${
+                  menuSection === "bar"
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-300/50"
+                    : "text-stone-500 hover:text-stone-800"
+                }`}
+              >
+                🍺 <span>Bar</span>
+              </button>
+            </div>
+
+            {/* Compact search input */}
+            <div className="flex-1 relative">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
               </svg>
               <input
@@ -771,35 +839,36 @@ export default function MenuPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search items or categories…"
-                className="w-full bg-stone-100 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder-stone-400 font-medium focus:outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all"
+                placeholder="Search…"
+                className="w-full bg-stone-100 rounded-lg pl-8 pr-7 py-1.5 text-[13px] text-stone-800 placeholder-stone-400 font-medium focus:outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all"
               />
               {search && (
                 <button
                   onClick={() => { setSearch(""); searchRef.current?.focus(); }}
-                  className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-stone-300 hover:bg-stone-400 flex items-center justify-center transition-colors"
+                  className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-stone-300 hover:bg-stone-400 flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               )}
             </div>
           </div>
+
           {/* Category pills — hidden while searching */}
           {!search && (
             <div className="relative">
               <div
                 ref={tabsRef}
-                className="flex gap-1.5 overflow-x-auto px-4 sm:px-6 pb-2.5"
+                className="flex gap-1.5 overflow-x-auto px-4 sm:px-6 pb-2 pt-0.5"
                 style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
               >
-                {CATEGORIES.map((cat) => (
+                {visibleCategories.map((cat) => (
                   <button
                     key={cat}
                     data-tab={cat}
                     onClick={() => scrollToCategory(cat)}
-                    className={`cursor-pointer flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all duration-200 select-none ${
+                    className={`cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold whitespace-nowrap transition-all duration-200 select-none ${
                       activeCategory === cat
                         ? "bg-orange-500 text-white shadow-md shadow-orange-300/40 scale-[1.04]"
                         : "bg-stone-100 text-stone-600 hover:bg-orange-50 hover:text-orange-600"
@@ -887,7 +956,7 @@ export default function MenuPage() {
         )}
 
         {/* ── Category Sections (hidden while searching) ── */}
-        {!searchQuery && CATEGORIES.map((cat) => (
+        {!searchQuery && visibleCategories.map((cat) => (
           <section
             key={cat}
             data-category={cat}
@@ -1055,27 +1124,54 @@ export default function MenuPage() {
                 })}
               </div>
 
-              {/* Time slot */}
-              <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Select Time</p>
-              <div className="relative mb-5">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <select
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="cursor-pointer w-full appearance-none bg-stone-50 border-2 border-stone-100 focus:border-orange-400 rounded-xl pl-10 pr-10 py-3 text-stone-800 font-semibold text-sm focus:outline-none transition-colors"
-                >
-                  {getAvailableTimeSlots().map((slot) => (
-                    <option key={slot} value={slot}>{slot}</option>
-                  ))}
-                </select>
-                <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              {/* Table selector (Dine-In) or Time selector (Pickup) */}
+              {orderType === "dine-in" ? (
+                <>
+                  <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Table Number</p>
+                  <div className="relative mb-5">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 6h18M7 14h10M7 18h10" />
+                      </svg>
+                    </div>
+                    <select
+                      value={selectedTable}
+                      onChange={(e) => setSelectedTable(e.target.value)}
+                      className="cursor-pointer w-full appearance-none bg-stone-50 border-2 border-stone-100 focus:border-orange-400 rounded-xl pl-10 pr-10 py-3 text-stone-800 font-semibold text-sm focus:outline-none transition-colors"
+                    >
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <option key={i + 1} value={`Table ${i + 1}`}>Table {i + 1}</option>
+                      ))}
+                    </select>
+                    <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Select Time</p>
+                  <div className="relative mb-5">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <select
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="cursor-pointer w-full appearance-none bg-stone-50 border-2 border-stone-100 focus:border-orange-400 rounded-xl pl-10 pr-10 py-3 text-stone-800 font-semibold text-sm focus:outline-none transition-colors"
+                    >
+                      {getAvailableTimeSlots().map((slot) => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                    <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </>
+              )}
 
               {/* Actions */}
               <div className="flex gap-3">
