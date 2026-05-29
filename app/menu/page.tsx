@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 
 type OrderType = "dine-in" | "pickup";
 
@@ -593,7 +594,9 @@ export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartClosing, setCartClosing] = useState(false);
   const [modal, setModal] = useState<MenuItem | null>(null);
+  const [modalClosing, setModalClosing] = useState(false);
   const [orderType, setOrderType] = useState<OrderType>("dine-in");
   const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[0]);
   const [search, setSearch] = useState("");
@@ -636,9 +639,26 @@ export default function MenuPage() {
 
   const openAddModal = (item: MenuItem) => {
     setModal(item);
+    setModalClosing(false);
     setOrderType("dine-in");
     const available = getAvailableTimeSlots();
     setSelectedTime(available[0]);
+  };
+
+  const closeModal = () => {
+    setModalClosing(true);
+    setTimeout(() => {
+      setModal(null);
+      setModalClosing(false);
+    }, 290);
+  };
+
+  const closeCart = () => {
+    setCartClosing(true);
+    setTimeout(() => {
+      setCartOpen(false);
+      setCartClosing(false);
+    }, 300);
   };
 
   const confirmAdd = () => {
@@ -708,8 +728,8 @@ export default function MenuPage() {
       <header className="bg-white border-b border-orange-100 sticky top-0 z-40 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm select-none">
-              S
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+              <Image src="/logo.jpg" alt="Shiva Drink & Dine" width={40} height={40} className="w-full h-full object-cover" priority />
             </div>
             <div>
               <h1 className="text-base font-black text-stone-900 leading-tight tracking-tight">Shiva Drink & Dine</h1>
@@ -831,31 +851,33 @@ export default function MenuPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                 {searchResults.map((item) => {
-                  const cartEntry = cart.find((c) => c.id === item.id);
                   const qty = cart.filter((c) => c.id === item.id).reduce((s, c) => s + c.quantity, 0);
                   return (
-                    <div key={item.id} className="bg-white rounded-xl px-4 py-3 border border-stone-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <div key={item.id} className="bg-white rounded-xl p-2.5 sm:px-4 sm:py-3 border border-stone-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
+                      <div className="flex items-start sm:items-center gap-1.5 sm:gap-2.5 min-w-0">
                         <VegIcon isVeg={item.isVeg} />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-wide">{item.category}</p>
-                          <h3 className="font-semibold text-stone-800 text-[14px] leading-snug">{item.name}</h3>
-                          <p className="text-[13px] font-bold text-stone-900 mt-0.5">₹{item.price.toLocaleString("en-IN")}</p>
+                          <h3 className="font-semibold text-stone-800 text-[12px] sm:text-[14px] leading-snug">{item.name}</h3>
+                          <p className="hidden sm:block text-[13px] font-bold text-stone-900 mt-0.5">₹{item.price.toLocaleString("en-IN")}</p>
                         </div>
                       </div>
-                      {qty > 0 ? (
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button onClick={() => setCart((prev) => { const idx = prev.findIndex((c) => c.id === item.id); if (idx === -1) return prev; const u = [...prev]; u[idx] = { ...u[idx], quantity: u[idx].quantity - 1 }; return u.filter((c) => c.quantity > 0); })} className="cursor-pointer w-8 h-8 rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-lg flex items-center justify-center transition-all">−</button>
-                          <span className="w-6 text-center font-black text-stone-900 text-[14px]">{qty}</span>
-                          <button onClick={() => setCart((prev) => { const idx = prev.findIndex((c) => c.id === item.id); if (idx === -1) return prev; const u = [...prev]; u[idx] = { ...u[idx], quantity: u[idx].quantity + 1 }; return u; })} className="cursor-pointer w-8 h-8 rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-lg flex items-center justify-center transition-all">+</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => openAddModal(item)} className="cursor-pointer flex-shrink-0 flex items-center gap-1 px-4 py-2 rounded-lg text-[13px] font-bold transition-all active:scale-95 select-none bg-orange-500 text-white hover:bg-orange-600 shadow-sm shadow-orange-200/60">
-                          <span className="text-base leading-none">+</span>Add
-                        </button>
-                      )}
+                      <div className="flex items-center justify-between sm:justify-start sm:flex-shrink-0 gap-1.5">
+                        <p className="sm:hidden text-[12px] font-bold text-stone-900">₹{item.price.toLocaleString("en-IN")}</p>
+                        {qty > 0 ? (
+                          <div className="flex items-center gap-0.5 sm:gap-1">
+                            <button onClick={() => setCart((prev) => { const idx = prev.findIndex((c) => c.id === item.id); if (idx === -1) return prev; const u = [...prev]; u[idx] = { ...u[idx], quantity: u[idx].quantity - 1 }; return u.filter((c) => c.quantity > 0); })} className="cursor-pointer w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-base sm:text-lg flex items-center justify-center transition-all">−</button>
+                            <span className="w-5 sm:w-6 text-center font-black text-stone-900 text-[13px] sm:text-[14px]">{qty}</span>
+                            <button onClick={() => setCart((prev) => { const idx = prev.findIndex((c) => c.id === item.id); if (idx === -1) return prev; const u = [...prev]; u[idx] = { ...u[idx], quantity: u[idx].quantity + 1 }; return u; })} className="cursor-pointer w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-base sm:text-lg flex items-center justify-center transition-all">+</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => openAddModal(item)} className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2.5 sm:px-4 py-1 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-[13px] font-bold transition-all active:scale-95 select-none bg-orange-500 text-white hover:bg-orange-600">
+                            <span className="leading-none">+</span>Add
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -883,69 +905,73 @@ export default function MenuPage() {
             </div>
 
             {/* Items Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
               {MENU_ITEMS.filter((i) => i.category === cat).map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-xl px-4 py-3 border border-stone-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex items-center justify-between gap-3 group"
+                  className="bg-white rounded-xl p-2.5 sm:px-4 sm:py-3 border border-stone-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3 group"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  {/* Name row — veg icon + name. Price shown under name on desktop only. */}
+                  <div className="flex items-start sm:items-center gap-1.5 sm:gap-2.5 min-w-0">
                     <VegIcon isVeg={item.isVeg} />
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-stone-800 text-[14px] leading-snug">{item.name}</h3>
-                      <p className="text-[13px] font-bold text-stone-900 mt-0.5">₹{item.price.toLocaleString("en-IN")}</p>
+                      <h3 className="font-semibold text-stone-800 text-[12px] sm:text-[14px] leading-snug">{item.name}</h3>
+                      <p className="hidden sm:block text-[13px] font-bold text-stone-900 mt-0.5">₹{item.price.toLocaleString("en-IN")}</p>
                     </div>
                   </div>
-                  {(() => {
-                    const cartEntry = cart.find((c) => c.id === item.id);
-                    const qty = cart.filter((c) => c.id === item.id).reduce((s, c) => s + c.quantity, 0);
+                  {/* Bottom row — price (mobile only, left) + button (right) */}
+                  <div className="flex items-center justify-between sm:justify-start sm:flex-shrink-0 gap-1.5">
+                    <p className="sm:hidden text-[12px] font-bold text-stone-900">₹{item.price.toLocaleString("en-IN")}</p>
+                    {(() => {
+                      const qty = cart.filter((c) => c.id === item.id).reduce((s, c) => s + c.quantity, 0);
 
-                    if (qty > 0) {
+                      if (qty > 0) {
+                        return (
+                          <div className="flex items-center gap-0.5 sm:gap-1">
+                            <button
+                              onClick={() =>
+                                setCart((prev) => {
+                                  const idx = prev.findIndex((c) => c.id === item.id);
+                                  if (idx === -1) return prev;
+                                  const updated = [...prev];
+                                  updated[idx] = { ...updated[idx], quantity: updated[idx].quantity - 1 };
+                                  return updated.filter((c) => c.quantity > 0);
+                                })
+                              }
+                              className="cursor-pointer w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-base sm:text-lg flex items-center justify-center transition-all"
+                            >
+                              −
+                            </button>
+                            <span className="w-5 sm:w-6 text-center font-black text-stone-900 text-[13px] sm:text-[14px]">{qty}</span>
+                            <button
+                              onClick={() =>
+                                setCart((prev) => {
+                                  const idx = prev.findIndex((c) => c.id === item.id);
+                                  if (idx === -1) return prev;
+                                  const updated = [...prev];
+                                  updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + 1 };
+                                  return updated;
+                                })
+                              }
+                              className="cursor-pointer w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-base sm:text-lg flex items-center justify-center transition-all"
+                            >
+                              +
+                            </button>
+                          </div>
+                        );
+                      }
+
                       return (
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            onClick={() =>
-                              setCart((prev) => {
-                                const idx = prev.findIndex((c) => c.id === item.id);
-                                if (idx === -1) return prev;
-                                const updated = [...prev];
-                                updated[idx] = { ...updated[idx], quantity: updated[idx].quantity - 1 };
-                                return updated.filter((c) => c.quantity > 0);
-                              })
-                            }
-                            className="cursor-pointer w-8 h-8 rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-lg flex items-center justify-center transition-all"
-                          >
-                            −
-                          </button>
-                          <span className="w-6 text-center font-black text-stone-900 text-[14px]">{qty}</span>
-                          <button
-                            onClick={() =>
-                              setCart((prev) => {
-                                const idx = prev.findIndex((c) => c.id === item.id);
-                                if (idx === -1) return prev;
-                                const updated = [...prev];
-                                updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + 1 };
-                                return updated;
-                              })
-                            }
-                            className="cursor-pointer w-8 h-8 rounded-lg bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-lg flex items-center justify-center transition-all"
-                          >
-                            +
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => openAddModal(item)}
+                          className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2.5 sm:px-4 py-1 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-[13px] font-bold transition-all active:scale-95 select-none bg-orange-500 text-white hover:bg-orange-600"
+                        >
+                          <span className="leading-none">+</span>
+                          Add
+                        </button>
                       );
-                    }
-
-                    return (
-                      <button
-                        onClick={() => openAddModal(item)}
-                        className="cursor-pointer flex-shrink-0 flex items-center gap-1 px-4 py-2 rounded-lg text-[13px] font-bold transition-all active:scale-95 select-none bg-orange-500 text-white hover:bg-orange-600 shadow-sm shadow-orange-200/60"
-                      >
-                        <span className="text-base leading-none">+</span>
-                        Add
-                      </button>
-                    );
-                  })()}
+                    })()}
+                  </div>
                 </div>
               ))}
             </div>
@@ -956,12 +982,16 @@ export default function MenuPage() {
 
       {/* ── Add Item Modal ──────────────────────────────────────── */}
       {modal && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-          onClick={() => setModal(null)}
-        >
+        <>
+          {/* Backdrop — animates independently from content */}
           <div
-            className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
+            className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-50 ${modalClosing ? "animate-backdrop-out" : "animate-backdrop-in"}`}
+            onClick={closeModal}
+          />
+          {/* Sheet container — pointer-events-none so clicks pass through to backdrop */}
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+          <div
+            className={`bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto ${modalClosing ? "modal-sheet-closing" : "modal-sheet"}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Gradient header */}
@@ -973,7 +1003,7 @@ export default function MenuPage() {
               <div className="w-10 h-1 bg-white/40 rounded-full mx-auto mb-4 sm:hidden" />
               {/* Close button */}
               <button
-                onClick={() => setModal(null)}
+                onClick={closeModal}
                 className="cursor-pointer absolute right-4 top-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors sm:flex hidden"
               >
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1050,7 +1080,7 @@ export default function MenuPage() {
               {/* Actions */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => setModal(null)}
+                  onClick={closeModal}
                   className="cursor-pointer flex-1 py-3.5 rounded-xl border-2 border-stone-200 text-stone-500 font-bold text-sm hover:bg-stone-50 transition-colors"
                 >
                   Cancel
@@ -1067,15 +1097,19 @@ export default function MenuPage() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </>
       )}
 
       {/* ── Cart Drawer ─────────────────────────────────────────── */}
       {cartOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={() => setCartOpen(false)} />
-
-          <div className="w-full max-w-sm bg-white flex flex-col shadow-2xl h-full overflow-hidden">
+        <>
+          {/* Backdrop — animates independently from cart panel */}
+          <div
+            className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-sm ${cartClosing ? "animate-backdrop-out" : "animate-backdrop-in"}`}
+            onClick={closeCart}
+          />
+          <div className={`fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white flex flex-col shadow-2xl overflow-hidden ${cartClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
             {/* Drawer Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
               <div>
@@ -1085,7 +1119,7 @@ export default function MenuPage() {
                 )}
               </div>
               <button
-                onClick={() => setCartOpen(false)}
+                onClick={closeCart}
                 className="cursor-pointer w-9 h-9 flex items-center justify-center rounded-full hover:bg-orange-50 text-stone-400 hover:text-orange-500 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1105,7 +1139,7 @@ export default function MenuPage() {
                   <p className="text-sm text-stone-400 mt-1">Add items from the menu to get started</p>
                 </div>
                 <button
-                  onClick={() => setCartOpen(false)}
+                  onClick={closeCart}
                   className="cursor-pointer mt-1 px-6 py-3 bg-orange-500 text-white rounded-full text-sm font-bold hover:bg-orange-600 transition-colors shadow-md"
                 >
                   Browse Menu
@@ -1198,7 +1232,7 @@ export default function MenuPage() {
               </>
             )}
           </div>
-        </div>
+        </>
       )}
 
       {/* ── Floating Cart Bar ───────────────────────────────────── */}
