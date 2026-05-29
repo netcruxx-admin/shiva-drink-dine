@@ -535,7 +535,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 403, name: "Black Currant Shake", description: "Black currant flavoured milkshake", price: 163, category: "Shakes", isVeg: true },
 ];
 
-const WHATSAPP_NUMBER = "918351024455";
+const WHATSAPP_NUMBER = "918988384800";
 
 function generateTimeSlots(): string[] {
   const slots: string[] = [];
